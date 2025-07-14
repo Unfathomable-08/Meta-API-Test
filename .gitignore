@@ -2,3 +2,4 @@
 venv/
 .pythonlibs/
 images/
+ig_session.json
