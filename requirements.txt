@@ -1,2 +1,6 @@
 instagrapi
 langchain
+python-dotenv
+huggingface_hub 
+pillow 
+httpx
