@@ -30,39 +30,36 @@ def load_credentials():
         logger.error(f"Error loading credentials: {e}")
         raise
 
-
 def generate_image(prompt, hf_token):
-    """Generate image from Hugging Face API using direct POST."""
+    """Generate image from Hugging Face API using StabilityAI Stable Diffusion 3.5 Large."""
     try:
-        # print("token", creds["hf_token"])
         headers = {
             "Authorization": f"Bearer {hf_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "image/png"
         }
 
         payload = {
-            "inputs": prompt,
-            "options": {"wait_for_model": True}
+            "inputs": prompt
         }
 
-        # Use Stable Diffusion 2.1 – works well for text-to-image
-        url = "https://api-inference.huggingface.co/models/CompVis/stable-diffusion-v1-4"
-  
-        response = httpx.post(url, headers=headers, json=payload)
+        url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3.5-large"
+
+        response = httpx.post(url, headers=headers, json=payload, timeout=60.0)
 
         if response.status_code != 200:
             logging.error(f"HF API Error {response.status_code}: {response.text}")
             raise Exception(f"Image generation failed: {response.status_code}")
 
         logging.info("Image generated successfully from HF API")
-        return response.content  # This is the image in bytes
+        return response.content  # PNG image in bytes
 
     except Exception as e:
         logging.error(f"Error generating image: {repr(e)}")
         logging.warning("Generating placeholder image instead")
         placeholder = Image.new("RGB", (512, 512), color="gray")
         buffer = io.BytesIO()
-        placeholder.save(buffer, format="JPEG")
+        placeholder.save(buffer, format="PNG")
         return buffer.getvalue()
 
 
@@ -133,9 +130,6 @@ def main():
         # Load credentials
         creds = load_credentials()
         hf_token = creds["hf_token"]
-
-        # Initialize Hugging Face client
-        client = InferenceClient(model="stabilityai/stable-diffusion-2-1", token=creds["hf_token"])
 
         # Generate and save image
         image_data = generate_image(prompt, hf_token)
